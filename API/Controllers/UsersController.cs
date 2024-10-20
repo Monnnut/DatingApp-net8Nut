@@ -1,19 +1,20 @@
 using System;
 using API.Data;
 using API.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]// /api/users
-public class UsersController(DataContext context) : ControllerBase
+//[Authorize]
+public class UsersController(DataContext context) : BaseApiController
 {
 
     //ActionResult VS IActionResult
     //interface that represents results of an action
     //ActiocResuls is a generic type that allows you to return result
+    [AllowAnonymous] // override authenticating
     [HttpGet]
     //IEnumerable is a generic interface represents a collection
     //of objects that you can iterate over. List/Arrays
@@ -26,7 +27,7 @@ public class UsersController(DataContext context) : ControllerBase
         //ActionResult allow us to retuen a Http Reponses
         return Ok(users);
     }
-
+    [Authorize]
     [HttpGet("{id}")] // /api/users/{id}
 
     public async Task<ActionResult<AppUser>> GetUser(int id)
