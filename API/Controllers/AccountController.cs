@@ -19,33 +19,36 @@ public class AccountController(DataContext context, ITokenService tokenService) 
         if (await UserExists(registerDto.Username)) return BadRequest("UserName is taken");
         //using hashing algorithmn to incript some text
         //using the dispose method will be called once the class is not user
-        using var hmac = new HMACSHA512();
+       
+        return Ok();
 
-        //HMAC (Hash-based Message Authentication Code)
+        // using var hmac = new HMACSHA512();
 
-        var user = new AppUser
-        {
+        // //HMAC (Hash-based Message Authentication Code)
 
-            UserName = registerDto.Username.ToLower(),
-            PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password)),
-            //above syntax convert password ib UTF-8 encoding since
-            // computers process data as bytes, it is necessary to convert
-            //password into a format the system can use to create Hash
-            //afte that, hmac.ComputeHash takes those bytes and run them
-            //through hashing algorithmn SHA512 to product Hash output
-            PasswordSalt = hmac.Key // to sort our password
+        // var user = new AppUser
+        // {
 
-        };
-        //put data in database
-        context.Users.Add(user);
-        //save database
-        await context.SaveChangesAsync();
+        //     UserName = registerDto.Username.ToLower(),
+        //     PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password)),
+        //     //above syntax convert password ib UTF-8 encoding since
+        //     // computers process data as bytes, it is necessary to convert
+        //     //password into a format the system can use to create Hash
+        //     //afte that, hmac.ComputeHash takes those bytes and run them
+        //     //through hashing algorithmn SHA512 to product Hash output
+        //     PasswordSalt = hmac.Key // to sort our password
 
-        return new UserDto
-        {
-            Username = user.UserName,
-            Token = tokenService.CreateToken(user)
-        };
+        // };
+        // //put data in database
+        // context.Users.Add(user);
+        // //save database
+        // await context.SaveChangesAsync();
+
+        // return new UserDto
+        // {
+        //     Username = user.UserName,
+        //     Token = tokenService.CreateToken(user)
+        // };
     }
 
     [HttpPost("login")]
