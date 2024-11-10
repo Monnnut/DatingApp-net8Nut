@@ -62,9 +62,8 @@ export class MembersService {
             m.photos = m.photos.filter(x => x.id !==photo.id)
           }
           return m;
-        }))
+        }))))
       }
       
-      );
-  }
+    
 }

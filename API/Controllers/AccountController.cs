@@ -5,13 +5,15 @@ using API.Data;
 using API.DTOs;
 using API.Entities;
 using API.Interfaces;
+using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers;
 
-public class AccountController(DataContext context, ITokenService tokenService) : BaseApiController
+public class AccountController(DataContext context, ITokenService tokenService,
+IMapper mapper) : BaseApiController
 {
     [HttpPost("register")] // account/register=> endpoint
     public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto) //using normal string paramter will not work as http does not know where to get the paramter. Thus we need DTOs (DATA TRANSFER OBJECT)
@@ -20,35 +22,34 @@ public class AccountController(DataContext context, ITokenService tokenService) 
         //using hashing algorithmn to incript some text
         //using the dispose method will be called once the class is not user
 
-        return Ok();
 
-        // using var hmac = new HMACSHA512();
 
-        // //HMAC (Hash-based Message Authentication Code)
+        using var hmac = new HMACSHA512();
 
-        // var user = new AppUser
-        // {
+        var user = mapper.Map<AppUser>(registerDto);
 
-        //     UserName = registerDto.Username.ToLower(),
-        //     PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password)),
+        user.UserName = registerDto.Username.ToLower();
+        user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password));
+        user.PasswordSalt = hmac.Key;// to sort our password
+        //HMAC (Hash-based Message Authentication Code)
+
         //     //above syntax convert password ib UTF-8 encoding since
         //     // computers process data as bytes, it is necessary to convert
         //     //password into a format the system can use to create Hash
         //     //afte that, hmac.ComputeHash takes those bytes and run them
         //     //through hashing algorithmn SHA512 to product Hash output
-        //     PasswordSalt = hmac.Key // to sort our password
 
-        // };
         // //put data in database
-        // context.Users.Add(user);
-        // //save database
-        // await context.SaveChangesAsync();
+        context.Users.Add(user);
+        //save database
+        await context.SaveChangesAsync();
 
-        // return new UserDto
-        // {
-        //     Username = user.UserName,
-        //     Token = tokenService.CreateToken(user)
-        // };
+        return new UserDto
+        {
+            Username = user.UserName,
+            Token = tokenService.CreateToken(user),
+            KnownAs = user.KnownAs
+        };
     }
 
     [HttpPost("login")]
@@ -58,7 +59,7 @@ public class AccountController(DataContext context, ITokenService tokenService) 
         .Include(p => p.Photos)
             .FirstOrDefaultAsync(
                 x => x.UserName == loginDto.Username.ToLower());
-        
+
         if (user == null) return Unauthorized("Invalid username");
 
         // user passwordSalt to get the same Hash as database
@@ -74,8 +75,10 @@ public class AccountController(DataContext context, ITokenService tokenService) 
         return new UserDto
         {
             Username = user.UserName,
+            KnownAs = user.KnownAs,
             Token = tokenService.CreateToken(user),
-            PhotoUrl = user.Photos.FirstOrDefault(x => x.IsMain)?.Url
+            PhotoUrl = user.Photos.FirstOrDefault(x => x.IsMain)?.Url,
+
         };
 
     }

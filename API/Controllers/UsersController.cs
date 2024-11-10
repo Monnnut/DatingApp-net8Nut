@@ -82,6 +82,8 @@ IPhotoService photoService) : BaseApiController
             PublicId = result.PublicId
         };
 
+        if (user.Photos.Count == 0) photo.IsMain = true;
+
         user.Photos.Add(photo);
 
         if (await userRepository.SaveAllAsync())
@@ -130,7 +132,7 @@ IPhotoService photoService) : BaseApiController
 
         user.Photos.Remove(photo);
 
-        if(await userRepository.SaveAllAsync()) return Ok();
+        if (await userRepository.SaveAllAsync()) return Ok();
 
         return BadRequest("Problem deleting photo");
 
