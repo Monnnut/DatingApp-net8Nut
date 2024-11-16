@@ -7,6 +7,35 @@ namespace API.Data;
 public class DataContext(DbContextOptions options) : DbContext(options)
 {
     public DbSet<AppUser> Users { get; set; }
+
+    public DbSet<UserLike> Likes { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        // Apply any base class configurations first.
+        base.OnModelCreating(builder);
+
+        // Set a composite primary key using SourceUserId and TargetUserId.
+        // This makes sure each "like" is unique between two users.
+        builder.Entity<UserLike>()
+            .HasKey(k => new { k.SourceUserId, k.TargetUserId });
+
+        // Set up the relationship where a UserLike belongs to one SourceUser.
+        // A SourceUser can have many likes (from other users).
+        builder.Entity<UserLike>()
+            .HasOne(s => s.SourceUser)  // Each UserLike has one SourceUser (the one who is liking).
+            .WithMany(l => l.LikeUsers)  // A SourceUser can have many "likes".
+            .HasForeignKey(s => s.SourceUserId)  // SourceUserId is the foreign key in UserLike.
+            .OnDelete(DeleteBehavior.Cascade);  // If SourceUser is deleted, delete their likes too.
+
+        // Set up the relationship where a UserLike belongs to one TargetUser.
+        // A TargetUser can be liked by many SourceUsers.
+        builder.Entity<UserLike>()
+            .HasOne(s => s.TargetUser)  // Each UserLike has one TargetUser (the one being liked).
+            .WithMany(l => l.LikedByUsers)  // A TargetUser can be liked by many SourceUsers.
+            .HasForeignKey(s => s.TargetUserId)  // TargetUserId is the foreign key in UserLike.
+            .OnDelete(DeleteBehavior.Cascade);  // If TargetUser is deleted, delete their likes too.
+    }
 }
 
 //What is entities framework
