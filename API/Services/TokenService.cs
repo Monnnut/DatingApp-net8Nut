@@ -17,7 +17,8 @@ public class TokenService(IConfiguration config) : ITokenService
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenKey));  // same key use to encript and decript
         var claims = new List<Claim>
     {
-        new(ClaimTypes.NameIdentifier, user.UserName)
+        new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new(ClaimTypes.Name, user.UserName)
     };
 
         //The signing credentials specify how the token will be secured.

@@ -27,19 +27,15 @@
                 </div>
                 <div>
                     <strong>Last Active:</strong>
-                    <p>{{member.lastActive}}</p>
+                    <p>{{member.lastActive | timeago}}</p>
                 </div>
                 <div>
                     <strong>Member Since:</strong>
-                    <p>{{member.created}}</p>
+                    <p>{{member.created | date: 'dd MMM yyyy'}}</p>
                 </div>
             </div>
             <div class="card-footer">
-                <button
-                [disabled] ="!editForm.dirty" 
-                form="editForm" 
-                type="submit" 
-                class="btn btn-success 
+                <button [disabled]="!editForm.dirty" form="editForm" type="submit" class="btn btn-success 
                 col-12">Save changes</button>
             </div>
         </div>
@@ -66,9 +62,7 @@
                 </form>
             </tab>
             <tab heading="Edit Photos">
-               <app-photo-editor [member]="member"
-               (memberChange) = "onMemberChange($event)"
-               ></app-photo-editor>
+                <app-photo-editor [member]="member" (memberChange)="onMemberChange($event)"></app-photo-editor>
             </tab>
         </tabset>
     </div>

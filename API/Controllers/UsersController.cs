@@ -4,6 +4,7 @@ using API.Data;
 using API.DTOs;
 using API.Entities;
 using API.Extensions;
+using API.Helpers;
 using API.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -25,11 +26,14 @@ IPhotoService photoService) : BaseApiController
     //IEnumerable is a generic interface represents a collection
     //of objects that you can iterate over. List/Arrays
     //no modification of the list
-    public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers()
+    public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers([FromQuery] UserParams userParams)
     {
-        //get users information from DBset<Users> and list it
-        var users = await userRepository.GetMemberAsync();
 
+        userParams.CurrentUsername = User.GetUsername();
+        //get users information from DBset<Users> and list it
+        var users = await userRepository.GetMemberAsync(userParams);
+
+        Response.AddPaginationHeader(users);
         //ActionResult allow us to retuen a Http Reponses
         return Ok(users);
     }
