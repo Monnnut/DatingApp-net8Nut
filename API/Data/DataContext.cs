@@ -1,5 +1,6 @@
 using System;
 using API.Entities;
+using API.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Data;
@@ -9,6 +10,8 @@ public class DataContext(DbContextOptions options) : DbContext(options)
     public DbSet<AppUser> Users { get; set; }
 
     public DbSet<UserLike> Likes { get; set; }
+
+    public DbSet<Message> Messages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -35,6 +38,20 @@ public class DataContext(DbContextOptions options) : DbContext(options)
             .WithMany(l => l.LikedByUsers)  // A TargetUser can be liked by many SourceUsers.
             .HasForeignKey(s => s.TargetUserId)  // TargetUserId is the foreign key in UserLike.
             .OnDelete(DeleteBehavior.Cascade);  // If TargetUser is deleted, delete their likes too.
+
+
+        builder.Entity<Message>()
+        .HasOne(s => s.Recipient)
+        .WithMany(x => x.MessagesRecieved)
+        .OnDelete(DeleteBehavior.Restrict);
+
+        
+        builder.Entity<Message>()
+        .HasOne(s => s.Sender)
+        .WithMany(x => x.MessagesSent)
+        .OnDelete(DeleteBehavior.Restrict);
+
+
     }
 }
 

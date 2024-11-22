@@ -43,4 +43,7 @@ public class AppUser
     public List<UserLike> LikedByUsers { get; set; } = [];
 
      public List<UserLike> LikeUsers { get; set; } = [];
+
+     public List<Message> MessagesSent { get; set; } = [];
+     public List<Message> MessagesRecieved { get; set; } = [];
 }

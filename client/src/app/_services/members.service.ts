@@ -58,6 +58,7 @@ resetUserParams() {
       .find((m: Member) => m.username === username);
 
     if (member) return of(member);
+    
 
     return this.http.get<Member>(this.baseUrl + 'users/' + username);
   }
