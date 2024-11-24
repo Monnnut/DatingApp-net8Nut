@@ -1,13 +1,16 @@
 using System;
 using API.Entities;
 using API.Extensions;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Data;
-
-public class DataContext(DbContextOptions options) : DbContext(options)
+//IdentityDbContext comes with a DbSet fpr Users
+public class DataContext(DbContextOptions options) : IdentityDbContext<
+AppUser, AppRoles, int, IdentityUserClaim<int>, AppUserRoles, IdentityUserLogin<int>
+, IdentityRoleClaim<int>, IdentityUserToken<int>>(options) //DbContext(options) //install package to get identiy DbContext
 {
-    public DbSet<AppUser> Users { get; set; }
 
     public DbSet<UserLike> Likes { get; set; }
 
@@ -17,6 +20,19 @@ public class DataContext(DbContextOptions options) : DbContext(options)
     {
         // Apply any base class configurations first.
         base.OnModelCreating(builder);
+
+        builder.Entity<AppUser>()
+            .HasMany(ur => ur.UserRoles)
+            .WithOne(u => u.User)
+            .HasForeignKey(ur => ur.UserId)
+            .IsRequired();
+
+        builder.Entity<AppRoles>()
+            .HasMany(ur => ur.UserRoles)
+            .WithOne(u => u.Role)
+            .HasForeignKey(ur => ur.RoleId)
+            .IsRequired();
+
 
         // Set a composite primary key using SourceUserId and TargetUserId.
         // This makes sure each "like" is unique between two users.
@@ -45,7 +61,7 @@ public class DataContext(DbContextOptions options) : DbContext(options)
         .WithMany(x => x.MessagesRecieved)
         .OnDelete(DeleteBehavior.Restrict);
 
-        
+
         builder.Entity<Message>()
         .HasOne(s => s.Sender)
         .WithMany(x => x.MessagesSent)

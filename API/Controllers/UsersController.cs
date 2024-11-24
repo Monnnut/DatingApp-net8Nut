@@ -37,7 +37,6 @@ IPhotoService photoService) : BaseApiController
         //ActionResult allow us to retuen a Http Reponses
         return Ok(users);
     }
-
     [HttpGet("{username}")] // /api/users/{id}
 
     public async Task<ActionResult<MemberDto>> GetUser(string username)

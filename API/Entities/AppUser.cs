@@ -1,10 +1,12 @@
 using System;
 using API.Extensions;
+using Microsoft.AspNetCore.Identity;
 
 
 namespace API.Entities;
-
-public class AppUser
+//IdentityUser is a framework that gives us properties that we don't need to create
+//for example PasswordHash, Id field, username field
+public class AppUser : IdentityUser<int>
 {
     //access modifiler (Public, Private, Internal)
     //get value and set value
@@ -13,11 +15,11 @@ public class AppUser
     // int is primitive type
     // use [Key] when primary key is not name Id
     //entity framework use auto increment number when new data is added
-    public int Id { get; set; }
+    // public int Id { get; set; }
 
-    //string is reference type
-    public required string UserName { get; set; }
-    public byte[] PasswordHash { get; set; } = [];
+    // //string is reference type
+    // public required string UserName { get; set; }
+    // public byte[] PasswordHash { get; set; } = [];
 
     public byte[] PasswordSalt { get; set; } = [];
 
@@ -46,4 +48,5 @@ public class AppUser
 
      public List<Message> MessagesSent { get; set; } = [];
      public List<Message> MessagesRecieved { get; set; } = [];
+     public ICollection<AppUserRoles> UserRoles { get; set; } =[];
 }

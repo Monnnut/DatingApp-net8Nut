@@ -31,7 +31,7 @@ IUserRepository userRepository, IMapper mapper) : BaseApiController
         var recipient = await userRepository.GetUserByUsernameAsync(createMessageDto.RecipientUsername);
 
         //step 4 check whether they exist
-        if (recipient == null || sender == null)
+        if (recipient == null || sender == null || sender.UserName == null || recipient.UserName == null)
         {
             return BadRequest("Cannot send messege");
         }
@@ -80,24 +80,25 @@ IUserRepository userRepository, IMapper mapper) : BaseApiController
         return Ok(await messageRepository.GetMessageThread(currentUsername, username));
     }
 
-    [HttpDelete ("{id}")]
+    [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteMessage(int id)
     {
         var username = User.GetUsername();
         var message = await messageRepository.GetMessage(id);
-        
-        if(message==null) return BadRequest("Cannot delete this message");
 
-        if(message.SenderUsername != username && message.RecipientUsername != username) return Forbid();
+        if (message == null) return BadRequest("Cannot delete this message");
 
-        if(message.SenderUsername == username) message.SenderDeleted = true;
-        if(message.RecipientUsername == username) message.RecipientDeleted = true;
+        if (message.SenderUsername != username && message.RecipientUsername != username) return Forbid();
 
-        if(message is {SenderDeleted:true, RecipientDeleted:true}){
+        if (message.SenderUsername == username) message.SenderDeleted = true;
+        if (message.RecipientUsername == username) message.RecipientDeleted = true;
+
+        if (message is { SenderDeleted: true, RecipientDeleted: true })
+        {
             messageRepository.DeleteMessage(message);
         }
 
-        if(await messageRepository.SavedAllAsync()) return Ok();
+        if (await messageRepository.SavedAllAsync()) return Ok();
 
         return BadRequest("Problem deleting the message");
 
