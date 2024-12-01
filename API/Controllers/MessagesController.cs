@@ -11,8 +11,7 @@ namespace API.Controllers;
 
 
 [Authorize]
-public class MessagesController(IMessageRepository messageRepository,
-IUserRepository userRepository, IMapper mapper) : BaseApiController
+public class MessagesController(IUnitOfWork unitOfWork, IMapper mapper) : BaseApiController
 
 {
     [HttpPost]//create message
@@ -27,8 +26,8 @@ IUserRepository userRepository, IMapper mapper) : BaseApiController
         }
 
         //step 3 establish who is send and receiver
-        var sender = await userRepository.GetUserByUsernameAsync(username);
-        var recipient = await userRepository.GetUserByUsernameAsync(createMessageDto.RecipientUsername);
+        var sender = await unitOfWork.UserRepository.GetUserByUsernameAsync(username);
+        var recipient = await unitOfWork.UserRepository.GetUserByUsernameAsync(createMessageDto.RecipientUsername);
 
         //step 4 check whether they exist
         if (recipient == null || sender == null || sender.UserName == null || recipient.UserName == null)
@@ -47,8 +46,8 @@ IUserRepository userRepository, IMapper mapper) : BaseApiController
         };
 
         //send to databse and check whether if saved async before mapping
-        messageRepository.AddMessage(message);
-        if (await messageRepository.SavedAllAsync()) return Ok(mapper.Map<MessageDto>(message));
+        unitOfWork.MessageRepository.AddMessage(message);
+        if (await unitOfWork.Complete()) return Ok(mapper.Map<MessageDto>(message));
 
         return BadRequest("Failed to save message");
     }
@@ -60,7 +59,7 @@ IUserRepository userRepository, IMapper mapper) : BaseApiController
         messageParams.UserName = User.GetUsername();
 
         //step 2 get the message. Data logic in repo
-        var messages = await messageRepository.GetMessagesForUser(messageParams);
+        var messages = await unitOfWork.MessageRepository.GetMessagesForUser(messageParams);
 
 
         //Step 3 get messages and pagination detail to the client with HTML headers
@@ -77,14 +76,14 @@ IUserRepository userRepository, IMapper mapper) : BaseApiController
     {
         var currentUsername = User.GetUsername();
 
-        return Ok(await messageRepository.GetMessageThread(currentUsername, username));
+        return Ok(await unitOfWork.MessageRepository.GetMessageThread(currentUsername, username));
     }
 
     [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteMessage(int id)
     {
         var username = User.GetUsername();
-        var message = await messageRepository.GetMessage(id);
+        var message = await unitOfWork.MessageRepository.GetMessage(id);
 
         if (message == null) return BadRequest("Cannot delete this message");
 
@@ -95,10 +94,10 @@ IUserRepository userRepository, IMapper mapper) : BaseApiController
 
         if (message is { SenderDeleted: true, RecipientDeleted: true })
         {
-            messageRepository.DeleteMessage(message);
+            unitOfWork.MessageRepository.DeleteMessage(message);
         }
 
-        if (await messageRepository.SavedAllAsync()) return Ok();
+        if (await unitOfWork.Complete()) return Ok();
 
         return BadRequest("Problem deleting the message");
 

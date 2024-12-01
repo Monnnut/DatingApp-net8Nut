@@ -24,10 +24,10 @@ public class LogUserActivity : IAsyncActionFilter
         var userid = resultContext.HttpContext.User.GetUserId();
 
         // Get an instance of IUserRepository from the dependency injection container.
-        var repo = resultContext.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
+        var unitOfWork = resultContext.HttpContext.RequestServices.GetRequiredService<IUnitOfWork>();
 
         // Fetch the user object from the database using the username.
-        var user = await repo.GetUserByIdAsync(userid);
+        var user = await unitOfWork.UserRepository.GetUserByIdAsync(userid);
 
         // If the user is not found (which shouldn't normally happen), exit the method.
         if (user == null) return;
@@ -36,6 +36,6 @@ public class LogUserActivity : IAsyncActionFilter
         user.LastActive = DateTime.UtcNow;
 
         // Save the changes to the database.
-        await repo.SaveAllAsync();
+        await unitOfWork.Complete();
     }
 }
