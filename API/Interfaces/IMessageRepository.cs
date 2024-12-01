@@ -1,5 +1,6 @@
 using System;
 using API.DTOs;
+using API.Entities;
 using API.Extensions;
 using API.Helpers;
 using CloudinaryDotNet.Actions;
@@ -17,4 +18,11 @@ public interface IMessageRepository
     Task<IEnumerable<MessageDto>> GetMessageThread(string currentUsername, string recipientUsername);
 
     Task<bool> SavedAllAsync();
+    void AddGroup(Group group);
+    void RemoveConnection(Connection connection);
+    Task<Connection?> GetConnection(string connectionId);
+
+    Task<Group?> GetMessageGroup(string groupName);
+
+    Task<Group?> GetGroupForConnection(string connectionId);
 }

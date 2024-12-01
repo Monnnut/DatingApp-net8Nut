@@ -1,5 +1,6 @@
 using System;
 using API.DTOs;
+using API.Entities;
 using API.Extensions;
 using API.Helpers;
 using API.Interfaces;
@@ -11,6 +12,11 @@ namespace API.Data;
 
 public class MessageRepository(DataContext context, IMapper mapper) : IMessageRepository
 {
+    public void AddGroup(Group group)
+    {
+        context.Groups.Add(group);
+    }
+
     public void AddMessage(Message message)
     {
         context.Messages.Add(message);
@@ -21,9 +27,29 @@ public class MessageRepository(DataContext context, IMapper mapper) : IMessageRe
         context.Messages.Remove(message);
     }
 
+    public async Task<Connection?> GetConnection(string connectionId)
+    {
+        return await context.Connections.FindAsync(connectionId);
+    }
+
+    public async Task<Group?> GetGroupForConnection(string connectionId)
+    {
+        return await context.Groups
+        .Include(x => x.Connections)
+        .Where(x => x.Connections.Any(c => c.ConnectionId == connectionId))
+        .FirstOrDefaultAsync();
+    }
+
     public async Task<Message?> GetMessage(int id)
     {
         return await context.Messages.FindAsync(id);
+    }
+
+    public async Task<Group?> GetMessageGroup(string groupName)
+    {
+        return await context.Groups
+        .Include(x => x.Connections)
+        .FirstOrDefaultAsync(x => x.Name == groupName);
     }
 
     public async Task<PageList<MessageDto>> GetMessagesForUser(MessageParams messageParams)
@@ -51,20 +77,17 @@ public class MessageRepository(DataContext context, IMapper mapper) : IMessageRe
     {
         //get the message
         var messages = await context.Messages
-        //make query to join sender, then photos
-        .Include(x => x.Sender).ThenInclude(x => x.Photos) //optimaize later
-        //make queru to join recipient, the photo
-        .Include(x => x.Recipient).ThenInclude(x => x.Photos)
         //get the query location
         .Where(x =>
-              x.RecipientUsername == currentUsername 
-              && x.RecipientDeleted == false 
+              x.RecipientUsername == currentUsername
+              && x.RecipientDeleted == false
               && x.SenderUsername == recipientUsername ||
-              x.SenderUsername == currentUsername 
-              && x.SenderDeleted == false 
+              x.SenderUsername == currentUsername
+              && x.SenderDeleted == false
               && x.RecipientUsername == recipientUsername)
         //arrange the message
         .OrderBy(x => x.MessageSent)
+        .ProjectTo<MessageDto>(mapper.ConfigurationProvider)
         //saved to async to database
         .ToListAsync();
 
@@ -79,7 +102,12 @@ public class MessageRepository(DataContext context, IMapper mapper) : IMessageRe
         }
 
         //map to dto
-        return mapper.Map<IEnumerable<MessageDto>>(messages);
+        return messages;
+    }
+
+    public void RemoveConnection(Connection connection)
+    {
+        context.Connections.Remove(connection);
     }
 
     public async Task<bool> SavedAllAsync()

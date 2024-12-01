@@ -15,7 +15,8 @@ AppUser, AppRoles, int, IdentityUserClaim<int>, AppUserRoles, IdentityUserLogin<
     public DbSet<UserLike> Likes { get; set; }
 
     public DbSet<Message> Messages { get; set; }
-
+    public DbSet<Group> Groups { get; set; }
+    public DbSet<Connection> Connections { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         // Apply any base class configurations first.

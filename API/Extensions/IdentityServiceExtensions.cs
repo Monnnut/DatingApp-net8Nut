@@ -16,7 +16,7 @@ public static class IdentityServiceExtensions
         services.AddIdentityCore<AppUser>(opt =>
         {
             opt.Password.RequireNonAlphanumeric = false;
-            
+
         })
         .AddRoles<AppRoles>()
         .AddRoleManager<RoleManager<AppRoles>>()
@@ -34,12 +34,29 @@ public static class IdentityServiceExtensions
                 ValidateIssuer = false,
                 ValidateAudience = false
             };
+
+
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+
+                    var path = context.HttpContext.Request.Path;
+                    if(!string.IsNullOrEmpty(accessToken)&& path.StartsWithSegments("/hubs"))
+                    {
+                        context.Token = accessToken;
+                    }
+
+                    return Task.CompletedTask;
+                }
+            };
         });
 
-//this helps us to build policy based authorization
+        //this helps us to build policy based authorization
         services.AddAuthorizationBuilder()
             .AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"))
-            .AddPolicy("ModeratePhotoRole", policy=> policy.RequireRole("Admin", "Moderator"));
+            .AddPolicy("ModeratePhotoRole", policy => policy.RequireRole("Admin", "Moderator"));
         return services;
     }
 }
